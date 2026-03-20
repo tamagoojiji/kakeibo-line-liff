@@ -2,7 +2,7 @@
  * 簡単家計簿 LIFF アプリ
  */
 (function() {
-  var LIFF_ID = ''; // LINE Developers ConsoleでLIFF登録後に設定
+  var LIFF_ID = '2009553035-Nz6zsu4s';
   var currentPage = 'dashboard';
   var currentMonth = getCurrentMonth();
   var currentYear = new Date().getFullYear().toString();
