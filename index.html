@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>簡単家計簿</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+</head>
+<body>
+  <div id="app">
+    <div id="loading" class="loading-screen">
+      <div class="spinner"></div>
+      <p>読み込み中...</p>
+    </div>
+
+    <!-- ダッシュボード -->
+    <div id="page-dashboard" class="page" style="display:none;">
+      <div class="header">
+        <h1 id="dashboard-month-label">3月のまとめ</h1>
+      </div>
+      <div class="balance-card">
+        <div class="balance-label">今月の残高</div>
+        <div class="balance-amount" id="dashboard-remaining">--</div>
+        <div class="balance-detail">
+          <span>予算 <span id="dashboard-budget">--</span></span>
+          <span>使用 <span id="dashboard-spent">--</span></span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="dashboard-progress"></div>
+        </div>
+      </div>
+      <div class="section">
+        <h2>カテゴリ別内訳</h2>
+        <canvas id="chart-category" height="200"></canvas>
+        <div id="category-list" class="category-list"></div>
+      </div>
+    </div>
+
+    <!-- 予算設定 -->
+    <div id="page-budget" class="page" style="display:none;">
+      <div class="header">
+        <h1>予算設定</h1>
+      </div>
+      <div class="section">
+        <div class="month-selector">
+          <button id="budget-prev" class="btn-icon">&lt;</button>
+          <span id="budget-month-label">2026年3月</span>
+          <button id="budget-next" class="btn-icon">&gt;</button>
+        </div>
+        <div class="form-group">
+          <label>月の総予算</label>
+          <input type="number" id="budget-total" placeholder="例: 50000" inputmode="numeric">
+        </div>
+        <h3>カテゴリ別予算（任意）</h3>
+        <div id="budget-categories"></div>
+        <button id="budget-save" class="btn-primary">保存する</button>
+      </div>
+      <div class="section" id="budget-suggestion" style="display:none;">
+        <h2>翌月の予算提案</h2>
+        <div id="suggestion-content"></div>
+      </div>
+    </div>
+
+    <!-- 明細一覧 -->
+    <div id="page-history" class="page" style="display:none;">
+      <div class="header">
+        <h1>明細一覧</h1>
+      </div>
+      <div class="month-selector">
+        <button id="history-prev" class="btn-icon">&lt;</button>
+        <span id="history-month-label">2026年3月</span>
+        <button id="history-next" class="btn-icon">&gt;</button>
+      </div>
+      <div id="history-total" class="history-total"></div>
+      <div id="history-list" class="history-list"></div>
+      <div id="history-empty" class="empty-state" style="display:none;">
+        <p>この月の明細はありません</p>
+      </div>
+    </div>
+
+    <!-- 月別推移 -->
+    <div id="page-trend" class="page" style="display:none;">
+      <div class="header">
+        <h1>月別推移</h1>
+      </div>
+      <div class="section">
+        <canvas id="chart-trend" height="250"></canvas>
+      </div>
+    </div>
+
+    <!-- 年間表 -->
+    <div id="page-annual" class="page" style="display:none;">
+      <div class="header">
+        <div class="month-selector">
+          <button id="annual-prev" class="btn-icon">&lt;</button>
+          <h1 id="annual-year-label">2026年</h1>
+          <button id="annual-next" class="btn-icon">&gt;</button>
+        </div>
+      </div>
+      <div class="section">
+        <div class="table-wrapper">
+          <table id="annual-table" class="annual-table"></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 設定 -->
+    <div id="page-settings" class="page" style="display:none;">
+      <div class="header">
+        <h1>設定</h1>
+      </div>
+      <div class="section">
+        <a href="privacy.html" class="settings-link">プライバシーポリシー</a>
+        <button id="delete-all" class="btn-danger">全データを削除</button>
+        <p class="caution">※ 削除すると全データが消去され、復元できません</p>
+      </div>
+    </div>
+
+    <!-- 編集モーダル -->
+    <div id="edit-modal" class="modal" style="display:none;">
+      <div class="modal-content">
+        <h2>明細を編集</h2>
+        <div class="form-group">
+          <label>日付</label>
+          <input type="date" id="edit-date">
+        </div>
+        <div class="form-group">
+          <label>店名・メモ</label>
+          <input type="text" id="edit-store">
+        </div>
+        <div class="form-group">
+          <label>金額</label>
+          <input type="number" id="edit-total" inputmode="numeric">
+        </div>
+        <div class="form-group">
+          <label>カテゴリ</label>
+          <select id="edit-category">
+            <option value="食費">🍽 食費</option>
+            <option value="日用品">🧴 日用品</option>
+            <option value="交通費">🚃 交通費</option>
+            <option value="医療費">🏥 医療費</option>
+            <option value="教育費">📚 教育費</option>
+            <option value="趣味・娯楽">🎮 趣味・娯楽</option>
+            <option value="その他">📦 その他</option>
+          </select>
+        </div>
+        <div class="modal-buttons">
+          <button id="edit-save" class="btn-primary">保存</button>
+          <button id="edit-cancel" class="btn-secondary">キャンセル</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ナビゲーション -->
+    <nav id="nav" class="bottom-nav" style="display:none;">
+      <button class="nav-item active" data-page="dashboard">
+        <span class="nav-icon">📊</span>
+        <span class="nav-label">ホーム</span>
+      </button>
+      <button class="nav-item" data-page="budget">
+        <span class="nav-icon">💰</span>
+        <span class="nav-label">予算</span>
+      </button>
+      <button class="nav-item" data-page="history">
+        <span class="nav-icon">📋</span>
+        <span class="nav-label">明細</span>
+      </button>
+      <button class="nav-item" data-page="trend">
+        <span class="nav-icon">📈</span>
+        <span class="nav-label">推移</span>
+      </button>
+      <button class="nav-item" data-page="annual">
+        <span class="nav-icon">📅</span>
+        <span class="nav-label">年間</span>
+      </button>
+      <button class="nav-item" data-page="settings">
+        <span class="nav-icon">⚙️</span>
+        <span class="nav-label">設定</span>
+      </button>
+    </nav>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/chart.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

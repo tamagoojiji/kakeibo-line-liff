@@ -1,0 +1,408 @@
+/**
+ * 簡単家計簿 LIFF アプリ
+ */
+(function() {
+  var LIFF_ID = ''; // LINE Developers ConsoleでLIFF登録後に設定
+  var currentPage = 'dashboard';
+  var currentMonth = getCurrentMonth();
+  var currentYear = new Date().getFullYear().toString();
+  var editingTxId = null;
+
+  var CATEGORY_EMOJI = {
+    '食費': '🍽', '日用品': '🧴', '交通費': '🚃',
+    '医療費': '🏥', '教育費': '📚', '趣味・娯楽': '🎮', 'その他': '📦'
+  };
+
+  // === 初期化 ===
+  function init() {
+    if (!LIFF_ID) {
+      // LIFF_IDが未設定の場合はデモモードで起動
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('nav').style.display = 'flex';
+      showPage('dashboard');
+      loadDashboard();
+      return;
+    }
+
+    liff.init({ liffId: LIFF_ID }).then(function() {
+      if (!liff.isLoggedIn()) {
+        liff.login();
+        return;
+      }
+      var token = liff.getAccessToken();
+      API.setAccessToken(token);
+
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('nav').style.display = 'flex';
+      showPage('dashboard');
+      loadDashboard();
+    }).catch(function(err) {
+      console.error('LIFF init error:', err);
+      document.getElementById('loading').innerHTML = '<p>エラーが発生しました</p>';
+    });
+  }
+
+  // === ページ切り替え ===
+  function showPage(page) {
+    currentPage = page;
+    document.querySelectorAll('.page').forEach(function(el) {
+      el.style.display = 'none';
+    });
+    document.getElementById('page-' + page).style.display = 'block';
+
+    document.querySelectorAll('.nav-item').forEach(function(el) {
+      el.classList.toggle('active', el.dataset.page === page);
+    });
+
+    // ページ初期化
+    switch (page) {
+      case 'dashboard': loadDashboard(); break;
+      case 'budget': loadBudget(); break;
+      case 'history': loadHistory(); break;
+      case 'trend': loadTrend(); break;
+      case 'annual': loadAnnual(); break;
+    }
+  }
+
+  // === ダッシュボード ===
+  function loadDashboard() {
+    var monthLabel = formatMonthLabel(currentMonth);
+    document.getElementById('dashboard-month-label').textContent = monthLabel + 'のまとめ';
+
+    API.getDashboard().then(function(data) {
+      if (!data.ok) return;
+
+      var budget = data.budget || 0;
+      var spent = data.totalSpent || 0;
+      var remaining = budget - spent;
+
+      document.getElementById('dashboard-budget').textContent = '¥' + formatNum(budget);
+      document.getElementById('dashboard-spent').textContent = '¥' + formatNum(spent);
+
+      if (budget > 0) {
+        document.getElementById('dashboard-remaining').textContent = '¥' + formatNum(remaining);
+        var pct = Math.max(0, Math.min(100, Math.round(remaining / budget * 100)));
+        document.getElementById('dashboard-progress').style.width = pct + '%';
+        document.getElementById('dashboard-progress').style.background =
+          remaining < 0 ? '#e53935' : '#4CAF50';
+      } else {
+        document.getElementById('dashboard-remaining').textContent = '¥' + formatNum(spent);
+        document.querySelector('.balance-label').textContent = '今月の使用額';
+        document.getElementById('dashboard-progress').style.width = '0%';
+      }
+
+      // カテゴリグラフ
+      ChartHelper.renderDoughnut('chart-category', data.categoryTotals || {});
+
+      // カテゴリリスト
+      var listEl = document.getElementById('category-list');
+      listEl.innerHTML = '';
+      ChartHelper.CATEGORIES.forEach(function(cat) {
+        var amount = (data.categoryTotals || {})[cat] || 0;
+        if (amount === 0) return;
+        var pct = spent > 0 ? Math.round(amount / spent * 100) : 0;
+        listEl.innerHTML +=
+          '<div class="category-row">' +
+            '<span class="category-name">' +
+              '<span style="color:' + ChartHelper.CATEGORY_COLORS[cat] + '">●</span> ' +
+              (CATEGORY_EMOJI[cat] || '') + ' ' + cat +
+            '</span>' +
+            '<span>' +
+              '<span class="category-amount">¥' + formatNum(amount) + '</span>' +
+              '<span class="category-pct"> (' + pct + '%)</span>' +
+            '</span>' +
+          '</div>';
+      });
+    });
+  }
+
+  // === 予算設定 ===
+  var budgetMonth = getCurrentMonth();
+
+  function loadBudget() {
+    document.getElementById('budget-month-label').textContent = formatMonthLabel(budgetMonth);
+
+    // カテゴリ入力フィールド生成
+    var catEl = document.getElementById('budget-categories');
+    if (catEl.children.length === 0) {
+      ChartHelper.CATEGORIES.forEach(function(cat) {
+        catEl.innerHTML +=
+          '<div class="form-group">' +
+            '<label>' + (CATEGORY_EMOJI[cat] || '') + ' ' + cat + '</label>' +
+            '<input type="number" id="budget-cat-' + cat + '" placeholder="0" inputmode="numeric">' +
+          '</div>';
+      });
+    }
+
+    API.getBudget(budgetMonth).then(function(data) {
+      if (!data.ok) return;
+      document.getElementById('budget-total').value = data.totalBudget || '';
+      ChartHelper.CATEGORIES.forEach(function(cat) {
+        var input = document.getElementById('budget-cat-' + cat);
+        if (input) input.value = (data.categoryBudgets || {})[cat] || '';
+      });
+    });
+
+    // 翌月提案
+    loadSuggestion();
+  }
+
+  function loadSuggestion() {
+    var nextMonth = getNextMonth();
+    API.getSuggestBudget(nextMonth).then(function(data) {
+      if (!data.ok || !data.suggestion || data.suggestion.totalBudget === 0) {
+        document.getElementById('budget-suggestion').style.display = 'none';
+        return;
+      }
+
+      document.getElementById('budget-suggestion').style.display = 'block';
+      var s = data.suggestion;
+      var html = '<p style="font-size:13px;color:#999;margin-bottom:8px">' + s.basedOn + '</p>';
+      html += '<div class="suggest-row"><span>合計</span><span>¥' + formatNum(s.totalBudget) + '</span></div>';
+      ChartHelper.CATEGORIES.forEach(function(cat) {
+        var val = (s.categoryBudgets || {})[cat] || 0;
+        if (val > 0) {
+          html += '<div class="suggest-row"><span>' + (CATEGORY_EMOJI[cat] || '') + ' ' + cat + '</span><span>¥' + formatNum(val) + '</span></div>';
+        }
+      });
+      document.getElementById('suggestion-content').innerHTML = html;
+    });
+  }
+
+  function saveBudget() {
+    var totalBudget = parseInt(document.getElementById('budget-total').value) || 0;
+    var categoryBudgets = {};
+    ChartHelper.CATEGORIES.forEach(function(cat) {
+      var input = document.getElementById('budget-cat-' + cat);
+      if (input) categoryBudgets[cat] = parseInt(input.value) || 0;
+    });
+
+    API.setBudget(budgetMonth, totalBudget, categoryBudgets).then(function(data) {
+      if (data.ok) {
+        alert('保存しました');
+      } else {
+        alert('保存に失敗しました');
+      }
+    });
+  }
+
+  // === 明細一覧 ===
+  var historyMonth = getCurrentMonth();
+
+  function loadHistory() {
+    document.getElementById('history-month-label').textContent = formatMonthLabel(historyMonth);
+
+    API.getTransactions(historyMonth).then(function(data) {
+      if (!data.ok) return;
+      var list = data.transactions || [];
+      var listEl = document.getElementById('history-list');
+      var emptyEl = document.getElementById('history-empty');
+      var totalEl = document.getElementById('history-total');
+
+      if (list.length === 0) {
+        listEl.innerHTML = '';
+        emptyEl.style.display = 'block';
+        totalEl.textContent = '';
+        return;
+      }
+
+      emptyEl.style.display = 'none';
+      var total = list.reduce(function(sum, tx) { return sum + tx.total; }, 0);
+      totalEl.textContent = list.length + '件 / 合計 ¥' + formatNum(total);
+
+      listEl.innerHTML = list.map(function(tx) {
+        return '<div class="history-item" data-id="' + tx.id + '">' +
+          '<div class="history-left">' +
+            '<span class="history-store">' + (tx.store || tx.memo || 'ー') + '</span>' +
+            '<span class="history-meta">' + tx.date + '</span>' +
+          '</div>' +
+          '<div class="history-right">' +
+            '<span class="history-amount">¥' + formatNum(tx.total) + '</span>' +
+            '<span class="history-category">' + (CATEGORY_EMOJI[tx.category] || '') + ' ' + tx.category + '</span>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    });
+  }
+
+  function openEditModal(txId) {
+    editingTxId = txId;
+
+    API.getTransactions(historyMonth).then(function(data) {
+      var tx = (data.transactions || []).find(function(t) { return t.id === txId; });
+      if (!tx) return;
+
+      document.getElementById('edit-date').value = tx.date;
+      document.getElementById('edit-store').value = tx.store || '';
+      document.getElementById('edit-total').value = tx.total;
+      document.getElementById('edit-category').value = tx.category;
+      document.getElementById('edit-modal').style.display = 'flex';
+    });
+  }
+
+  function saveEdit() {
+    if (!editingTxId) return;
+    var data = {
+      date: document.getElementById('edit-date').value,
+      store: document.getElementById('edit-store').value,
+      total: parseInt(document.getElementById('edit-total').value) || 0,
+      category: document.getElementById('edit-category').value
+    };
+
+    API.updateTransaction(editingTxId, data).then(function(res) {
+      document.getElementById('edit-modal').style.display = 'none';
+      editingTxId = null;
+      if (res.ok) loadHistory();
+      else alert('更新に失敗しました');
+    });
+  }
+
+  // === 月別推移 ===
+  function loadTrend() {
+    API.getTrend().then(function(data) {
+      if (!data.ok) return;
+      ChartHelper.renderTrend('chart-trend', data.months || []);
+    });
+  }
+
+  // === 年間表 ===
+  function loadAnnual() {
+    document.getElementById('annual-year-label').textContent = currentYear + '年';
+
+    API.getAnnual(currentYear).then(function(data) {
+      if (!data.ok) return;
+      var table = document.getElementById('annual-table');
+      var months = data.months || [];
+
+      var html = '<thead><tr><th>月</th>';
+      ChartHelper.CATEGORIES.forEach(function(cat) {
+        html += '<th>' + (CATEGORY_EMOJI[cat] || '') + '</th>';
+      });
+      html += '<th>合計</th></tr></thead><tbody>';
+
+      months.forEach(function(m) {
+        var monthNum = parseInt(m.month.split('-')[1]);
+        html += '<tr><td>' + monthNum + '月</td>';
+        ChartHelper.CATEGORIES.forEach(function(cat) {
+          var val = (m.categoryTotals || {})[cat] || 0;
+          html += '<td>' + (val > 0 ? formatNum(val) : '-') + '</td>';
+        });
+        html += '<td><strong>' + (m.totalSpent > 0 ? formatNum(m.totalSpent) : '-') + '</strong></td></tr>';
+      });
+
+      // 年間合計行
+      html += '<tr style="border-top:2px solid #333"><td><strong>合計</strong></td>';
+      ChartHelper.CATEGORIES.forEach(function(cat) {
+        var val = (data.yearCategoryTotals || {})[cat] || 0;
+        html += '<td><strong>' + (val > 0 ? formatNum(val) : '-') + '</strong></td>';
+      });
+      html += '<td><strong>' + formatNum(data.yearTotal || 0) + '</strong></td></tr>';
+
+      html += '</tbody>';
+      table.innerHTML = html;
+    });
+  }
+
+  // === イベントバインド ===
+  function bindEvents() {
+    // ナビゲーション
+    document.querySelectorAll('.nav-item').forEach(function(el) {
+      el.addEventListener('click', function() {
+        showPage(this.dataset.page);
+      });
+    });
+
+    // 予算月切り替え
+    document.getElementById('budget-prev').addEventListener('click', function() {
+      budgetMonth = shiftMonth(budgetMonth, -1);
+      loadBudget();
+    });
+    document.getElementById('budget-next').addEventListener('click', function() {
+      budgetMonth = shiftMonth(budgetMonth, 1);
+      loadBudget();
+    });
+    document.getElementById('budget-save').addEventListener('click', saveBudget);
+
+    // 明細月切り替え
+    document.getElementById('history-prev').addEventListener('click', function() {
+      historyMonth = shiftMonth(historyMonth, -1);
+      loadHistory();
+    });
+    document.getElementById('history-next').addEventListener('click', function() {
+      historyMonth = shiftMonth(historyMonth, 1);
+      loadHistory();
+    });
+
+    // 明細クリック → 編集
+    document.getElementById('history-list').addEventListener('click', function(e) {
+      var item = e.target.closest('.history-item');
+      if (item) openEditModal(item.dataset.id);
+    });
+
+    // 編集モーダル
+    document.getElementById('edit-save').addEventListener('click', saveEdit);
+    document.getElementById('edit-cancel').addEventListener('click', function() {
+      document.getElementById('edit-modal').style.display = 'none';
+      editingTxId = null;
+    });
+
+    // 年間切り替え
+    document.getElementById('annual-prev').addEventListener('click', function() {
+      currentYear = (parseInt(currentYear) - 1).toString();
+      loadAnnual();
+    });
+    document.getElementById('annual-next').addEventListener('click', function() {
+      currentYear = (parseInt(currentYear) + 1).toString();
+      loadAnnual();
+    });
+
+    // データ削除
+    document.getElementById('delete-all').addEventListener('click', function() {
+      if (confirm('本当に全データを削除しますか？\nこの操作は取り消せません。')) {
+        API.deleteAllData().then(function(res) {
+          if (res.ok) {
+            alert('データを削除しました');
+            if (typeof liff !== 'undefined' && liff.isInClient && liff.isInClient()) {
+              liff.closeWindow();
+            }
+          } else {
+            alert('削除に失敗しました');
+          }
+        });
+      }
+    });
+  }
+
+  // === ユーティリティ ===
+  function getCurrentMonth() {
+    var d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+  }
+
+  function getNextMonth() {
+    var d = new Date();
+    d.setMonth(d.getMonth() + 1);
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+  }
+
+  function shiftMonth(month, delta) {
+    var parts = month.split('-');
+    var d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1 + delta, 1);
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+  }
+
+  function formatMonthLabel(month) {
+    var parts = month.split('-');
+    return parts[0] + '年' + parseInt(parts[1]) + '月';
+  }
+
+  function formatNum(n) {
+    return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  }
+
+  // === 起動 ===
+  document.addEventListener('DOMContentLoaded', function() {
+    bindEvents();
+    init();
+  });
+})();
