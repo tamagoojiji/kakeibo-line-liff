@@ -456,3 +456,96 @@ body {
 #suggestion-content .suggest-row:last-child {
   border-bottom: none;
 }
+
+/* === CSVインポート === */
+.import-desc {
+  font-size: 13px;
+  color: var(--text-light);
+  margin-bottom: 16px;
+}
+
+.file-select-btn {
+  display: block;
+  text-align: center;
+  padding: 14px;
+  background: var(--primary);
+  color: white;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.file-select-btn:active {
+  background: var(--primary-dark);
+}
+
+.import-status {
+  margin-top: 16px;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  text-align: center;
+}
+
+.import-status.loading {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+.import-status.error {
+  background: #ffebee;
+  color: var(--danger);
+}
+
+.import-status.success {
+  background: #e8f5e9;
+  color: var(--primary-dark);
+}
+
+.import-table-wrapper {
+  overflow-x: auto;
+  margin: 12px 0;
+}
+
+.import-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.import-table th {
+  background: #f5f5f5;
+  padding: 8px 6px;
+  text-align: left;
+  font-weight: bold;
+  border-bottom: 2px solid var(--border);
+  white-space: nowrap;
+}
+
+.import-table td {
+  padding: 8px 6px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.import-table td.amount {
+  text-align: right;
+  font-weight: bold;
+}
+
+.import-cat-select {
+  font-size: 12px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: white;
+}
+
+#import-confirm {
+  margin-top: 12px;
+}
+
+#import-cancel {
+  margin-top: 8px;
+}

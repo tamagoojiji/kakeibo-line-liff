@@ -106,6 +106,34 @@
       </div>
     </div>
 
+    <!-- CSVインポート -->
+    <div id="page-import" class="page" style="display:none;">
+      <div class="header">
+        <h1>CSV取り込み</h1>
+      </div>
+      <div class="section">
+        <p class="import-desc">銀行口座やクレジットカードの明細CSVを取り込めます。</p>
+        <label class="file-select-btn" id="csv-file-label">
+          📄 CSVファイルを選択
+          <input type="file" id="csv-file-input" accept=".csv" style="display:none;">
+        </label>
+        <div id="import-status" class="import-status" style="display:none;"></div>
+        <div id="import-preview" style="display:none;">
+          <h3 id="import-summary"></h3>
+          <div class="import-table-wrapper">
+            <table id="import-table" class="import-table">
+              <thead>
+                <tr><th>日付</th><th>店名</th><th>金額</th><th>カテゴリ</th></tr>
+              </thead>
+              <tbody id="import-tbody"></tbody>
+            </table>
+          </div>
+          <button id="import-confirm" class="btn-primary">全件取り込み</button>
+          <button id="import-cancel" class="btn-secondary">キャンセル</button>
+        </div>
+      </div>
+    </div>
+
     <!-- 設定 -->
     <div id="page-settings" class="page" style="display:none;">
       <div class="header">
@@ -174,6 +202,10 @@
       <button class="nav-item" data-page="annual">
         <span class="nav-icon">📅</span>
         <span class="nav-label">年間</span>
+      </button>
+      <button class="nav-item" data-page="import">
+        <span class="nav-icon">📄</span>
+        <span class="nav-label">取込</span>
       </button>
       <button class="nav-item" data-page="settings">
         <span class="nav-icon">⚙️</span>

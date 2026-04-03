@@ -46,6 +46,12 @@ var API = (function() {
     },
     deleteAllData: function() {
       return get('delete_all_data');
+    },
+    importCsv: function(csvText) {
+      return get('import_csv', { csvText: csvText });
+    },
+    confirmImport: function(items) {
+      return get('confirm_import', { items: items });
     }
   };
 })();
