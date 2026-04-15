@@ -58,10 +58,8 @@
     switch (page) {
       case 'dashboard': loadDashboard(); break;
       case 'budget': loadBudget(); break;
-      case 'history': loadHistory(); break;
-      case 'trend': loadTrend(); break;
       case 'calendar': loadCalendar(); break;
-      case 'annual': loadAnnual(); break;
+      case 'analysis': loadAnalysis(); break;
       case 'import': loadImport(); break;
     }
   }
@@ -188,58 +186,17 @@
     });
   }
 
-  // === 明細一覧 ===
-  var historyMonth = getCurrentMonth();
-
-  function loadHistory() {
-    document.getElementById('history-month-label').textContent = formatMonthLabel(historyMonth);
-
-    API.getTransactions(historyMonth).then(function(data) {
-      if (!data.ok) return;
-      var list = data.transactions || [];
-      var listEl = document.getElementById('history-list');
-      var emptyEl = document.getElementById('history-empty');
-      var totalEl = document.getElementById('history-total');
-
-      if (list.length === 0) {
-        listEl.innerHTML = '';
-        emptyEl.style.display = 'block';
-        totalEl.textContent = '';
-        return;
-      }
-
-      emptyEl.style.display = 'none';
-      var total = list.reduce(function(sum, tx) { return sum + tx.total; }, 0);
-      totalEl.textContent = list.length + '件 / 合計 ¥' + formatNum(total);
-
-      listEl.innerHTML = list.map(function(tx) {
-        return '<div class="history-item" data-id="' + tx.id + '">' +
-          '<div class="history-left">' +
-            '<span class="history-store">' + (tx.store || tx.memo || 'ー') + '</span>' +
-            '<span class="history-meta">' + tx.date + '</span>' +
-          '</div>' +
-          '<div class="history-right">' +
-            '<span class="history-amount">¥' + formatNum(tx.total) + '</span>' +
-            '<span class="history-category">' + (CATEGORY_EMOJI[tx.category] || '') + ' ' + tx.category + '</span>' +
-          '</div>' +
-        '</div>';
-      }).join('');
-    });
-  }
-
+  // === 編集モーダル ===
   function openEditModal(txId) {
     editingTxId = txId;
+    var tx = calendarTransactions.find(function(t) { return t.id === txId; });
+    if (!tx) return;
 
-    API.getTransactions(historyMonth).then(function(data) {
-      var tx = (data.transactions || []).find(function(t) { return t.id === txId; });
-      if (!tx) return;
-
-      document.getElementById('edit-date').value = tx.date;
-      document.getElementById('edit-store').value = tx.store || '';
-      document.getElementById('edit-total').value = tx.total;
-      document.getElementById('edit-category').value = tx.category;
-      document.getElementById('edit-modal').style.display = 'flex';
-    });
+    document.getElementById('edit-date').value = tx.date;
+    document.getElementById('edit-store').value = tx.store || '';
+    document.getElementById('edit-total').value = tx.total;
+    document.getElementById('edit-category').value = tx.category;
+    document.getElementById('edit-modal').style.display = 'flex';
   }
 
   function saveEdit() {
@@ -254,21 +211,24 @@
     API.updateTransaction(editingTxId, data).then(function(res) {
       document.getElementById('edit-modal').style.display = 'none';
       editingTxId = null;
-      if (res.ok) loadHistory();
+      if (res.ok) loadCalendar();
       else alert('更新に失敗しました');
     });
   }
 
-  // === 月別推移 ===
-  function loadTrend() {
+  // === 分析（推移+年間） ===
+  function loadAnalysis() {
+    // 推移グラフ
     API.getTrend().then(function(data) {
       if (!data.ok) return;
       ChartHelper.renderTrend('chart-trend', data.months || []);
     });
+
+    // 年間表
+    loadAnnualTable();
   }
 
-  // === 年間表 ===
-  function loadAnnual() {
+  function loadAnnualTable() {
     document.getElementById('annual-year-label').textContent = currentYear + '年';
 
     API.getAnnual(currentYear).then(function(data) {
@@ -292,7 +252,6 @@
         html += '<td><strong>' + (m.totalSpent > 0 ? formatNum(m.totalSpent) : '-') + '</strong></td></tr>';
       });
 
-      // 年間合計行
       html += '<tr style="border-top:2px solid #333"><td><strong>合計</strong></td>';
       ChartHelper.CATEGORIES.forEach(function(cat) {
         var val = (data.yearCategoryTotals || {})[cat] || 0;
@@ -518,22 +477,6 @@
     });
     document.getElementById('budget-save').addEventListener('click', saveBudget);
 
-    // 明細月切り替え
-    document.getElementById('history-prev').addEventListener('click', function() {
-      historyMonth = shiftMonth(historyMonth, -1);
-      loadHistory();
-    });
-    document.getElementById('history-next').addEventListener('click', function() {
-      historyMonth = shiftMonth(historyMonth, 1);
-      loadHistory();
-    });
-
-    // 明細クリック → 編集
-    document.getElementById('history-list').addEventListener('click', function(e) {
-      var item = e.target.closest('.history-item');
-      if (item) openEditModal(item.dataset.id);
-    });
-
     // 編集モーダル
     document.getElementById('edit-save').addEventListener('click', saveEdit);
     document.getElementById('edit-cancel').addEventListener('click', function() {
@@ -559,14 +502,20 @@
       }
     });
 
+    // カレンダー詳細の明細クリック → 編集
+    document.getElementById('calendar-detail-list').addEventListener('click', function(e) {
+      var item = e.target.closest('.history-item');
+      if (item) openEditModal(item.dataset.id);
+    });
+
     // 年間切り替え
     document.getElementById('annual-prev').addEventListener('click', function() {
       currentYear = (parseInt(currentYear) - 1).toString();
-      loadAnnual();
+      loadAnnualTable();
     });
     document.getElementById('annual-next').addEventListener('click', function() {
       currentYear = (parseInt(currentYear) + 1).toString();
-      loadAnnual();
+      loadAnnualTable();
     });
 
     // CSVインポート

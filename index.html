@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>簡単家計簿</title>
-  <link rel="stylesheet" href="css/style.css?v=2">
+  <link rel="stylesheet" href="css/style.css?v=3">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 </head>
@@ -63,23 +63,6 @@
       </div>
     </div>
 
-    <!-- 明細一覧 -->
-    <div id="page-history" class="page" style="display:none;">
-      <div class="header">
-        <h1>明細一覧</h1>
-      </div>
-      <div class="month-selector">
-        <button id="history-prev" class="btn-icon">&lt;</button>
-        <span id="history-month-label">2026年3月</span>
-        <button id="history-next" class="btn-icon">&gt;</button>
-      </div>
-      <div id="history-total" class="history-total"></div>
-      <div id="history-list" class="history-list"></div>
-      <div id="history-empty" class="empty-state" style="display:none;">
-        <p>この月の明細はありません</p>
-      </div>
-    </div>
-
     <!-- カレンダー -->
     <div id="page-calendar" class="page" style="display:none;">
       <div class="header">
@@ -111,26 +94,21 @@
       </div>
     </div>
 
-    <!-- 月別推移 -->
-    <div id="page-trend" class="page" style="display:none;">
+    <!-- 分析（推移+年間） -->
+    <div id="page-analysis" class="page" style="display:none;">
       <div class="header">
-        <h1>月別推移</h1>
+        <h1>分析</h1>
       </div>
       <div class="section">
+        <h2>月別推移（過去12ヶ月）</h2>
         <canvas id="chart-trend" height="250"></canvas>
       </div>
-    </div>
-
-    <!-- 年間表 -->
-    <div id="page-annual" class="page" style="display:none;">
-      <div class="header">
-        <div class="month-selector">
+      <div class="section">
+        <div class="month-selector" style="padding:8px 0;">
           <button id="annual-prev" class="btn-icon">&lt;</button>
-          <h1 id="annual-year-label">2026年</h1>
+          <h2 id="annual-year-label" style="margin:0;">2026年</h2>
           <button id="annual-next" class="btn-icon">&gt;</button>
         </div>
-      </div>
-      <div class="section">
         <div class="table-wrapper">
           <table id="annual-table" class="annual-table"></table>
         </div>
@@ -222,21 +200,13 @@
         <span class="nav-icon">💰</span>
         <span class="nav-label">予算</span>
       </button>
-      <button class="nav-item" data-page="history">
-        <span class="nav-icon">📋</span>
-        <span class="nav-label">明細</span>
-      </button>
       <button class="nav-item" data-page="calendar">
-        <span class="nav-icon">🗓</span>
+        <span class="nav-icon">📅</span>
         <span class="nav-label">カレンダー</span>
       </button>
-      <button class="nav-item" data-page="trend">
+      <button class="nav-item" data-page="analysis">
         <span class="nav-icon">📈</span>
-        <span class="nav-label">推移</span>
-      </button>
-      <button class="nav-item" data-page="annual">
-        <span class="nav-icon">📅</span>
-        <span class="nav-label">年間</span>
+        <span class="nav-label">分析</span>
       </button>
       <button class="nav-item" data-page="import">
         <span class="nav-icon">📄</span>
@@ -249,8 +219,8 @@
     </nav>
   </div>
 
-  <script src="js/api.js?v=2"></script>
-  <script src="js/chart.js?v=2"></script>
-  <script src="js/app.js?v=2"></script>
+  <script src="js/api.js?v=3"></script>
+  <script src="js/chart.js?v=3"></script>
+  <script src="js/app.js?v=3"></script>
 </body>
 </html>
