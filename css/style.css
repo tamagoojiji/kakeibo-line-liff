@@ -16,12 +16,16 @@
   --nav-height: 60px;
 }
 
+html {
+  height: 100%;
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
   background: var(--bg);
   color: var(--text);
-  padding-bottom: calc(var(--nav-height) + 16px);
   -webkit-text-size-adjust: 100%;
+  min-height: 100%;
 }
 
 /* ローディング */
@@ -44,6 +48,13 @@ body {
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+/* ページ共通 */
+.page {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: calc(var(--nav-height) + 16px);
 }
 
 /* ヘッダー */
@@ -410,12 +421,15 @@ body {
   position: fixed;
   bottom: 0;
   left: 0;
+  right: 0;
   width: 100%;
   height: var(--nav-height);
   background: var(--card);
   border-top: 1px solid var(--border);
   display: flex;
   z-index: 50;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
 }
 
 .nav-item {
