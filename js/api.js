@@ -2,7 +2,7 @@
  * GAS API通信（全てGETで統一 — GAS WebアプリのCORS制約回避）
  */
 var API = (function() {
-  var BASE_URL = 'https://script.google.com/macros/s/AKfycbxnfdfAjIHbG2npCQbT0cE-5PYpHJzNN6TSsjt5Zq9EWHCRuVOq7T8rfWKfVx-0EhUE/exec';
+  var BASE_URL = 'https://kakeibo.tamago-ai-world.com/api';
   var accessToken = null;
 
   function setAccessToken(token) {
