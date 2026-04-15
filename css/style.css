@@ -16,8 +16,9 @@
   --nav-height: 60px;
 }
 
-html {
+html, body {
   height: 100%;
+  overflow: hidden;
 }
 
 body {
@@ -25,7 +26,13 @@ body {
   background: var(--bg);
   color: var(--text);
   -webkit-text-size-adjust: 100%;
-  min-height: 100%;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
 }
 
 /* ローディング */
@@ -52,9 +59,10 @@ body {
 
 /* ページ共通 */
 .page {
+  flex: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding-bottom: calc(var(--nav-height) + 16px);
+  padding-bottom: 16px;
 }
 
 /* ヘッダー */
@@ -418,18 +426,13 @@ body {
 
 /* ボトムナビ */
 .bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  flex-shrink: 0;
   width: 100%;
   height: var(--nav-height);
   background: var(--card);
   border-top: 1px solid var(--border);
   display: flex;
   z-index: 50;
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
 }
 
 .nav-item {
