@@ -314,6 +314,11 @@
     document.getElementById('calendar-month-label').textContent = formatMonthLabel(calendarMonth);
     document.getElementById('calendar-detail').style.display = 'none';
     selectedCalDate = null;
+    calendarTransactions = [];
+    document.getElementById('calendar-total').textContent = '';
+
+    // まずグリッドだけ描画（データなし）
+    renderCalendar();
 
     API.getTransactions(calendarMonth).then(function(data) {
       if (!data.ok) return;
@@ -323,6 +328,7 @@
       document.getElementById('calendar-total').textContent =
         calendarTransactions.length + '件 / 合計 ¥' + formatNum(total);
 
+      // データ付きで再描画
       renderCalendar();
     });
   }
