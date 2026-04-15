@@ -60,6 +60,7 @@
       case 'budget': loadBudget(); break;
       case 'history': loadHistory(); break;
       case 'trend': loadTrend(); break;
+      case 'calendar': loadCalendar(); break;
       case 'annual': loadAnnual(); break;
       case 'import': loadImport(); break;
     }
@@ -304,6 +305,104 @@
     });
   }
 
+  // === カレンダー ===
+  var calendarMonth = getCurrentMonth();
+  var calendarTransactions = [];
+  var selectedCalDate = null;
+
+  function loadCalendar() {
+    document.getElementById('calendar-month-label').textContent = formatMonthLabel(calendarMonth);
+    document.getElementById('calendar-detail').style.display = 'none';
+    selectedCalDate = null;
+
+    API.getTransactions(calendarMonth).then(function(data) {
+      if (!data.ok) return;
+      calendarTransactions = data.transactions || [];
+
+      var total = calendarTransactions.reduce(function(s, tx) { return s + tx.total; }, 0);
+      document.getElementById('calendar-total').textContent =
+        calendarTransactions.length + '件 / 合計 ¥' + formatNum(total);
+
+      renderCalendar();
+    });
+  }
+
+  function renderCalendar() {
+    var parts = calendarMonth.split('-');
+    var year = parseInt(parts[0]);
+    var month = parseInt(parts[1]);
+    var firstDay = new Date(year, month - 1, 1).getDay();
+    var daysInMonth = new Date(year, month, 0).getDate();
+    var today = new Date();
+    var todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+
+    // 日ごとの合計を計算
+    var dayTotals = {};
+    calendarTransactions.forEach(function(tx) {
+      var day = parseInt(tx.date.split('-')[2]);
+      dayTotals[day] = (dayTotals[day] || 0) + tx.total;
+    });
+
+    var html = '';
+    // 空セル（月初の曜日まで）
+    for (var i = 0; i < firstDay; i++) {
+      html += '<div class="cal-cell empty"></div>';
+    }
+
+    for (var d = 1; d <= daysInMonth; d++) {
+      var dateStr = calendarMonth + '-' + String(d).padStart(2, '0');
+      var dow = (firstDay + d - 1) % 7;
+      var classes = 'cal-cell';
+      if (dow === 0) classes += ' sun';
+      if (dow === 6) classes += ' sat';
+      if (dateStr === todayStr) classes += ' today';
+      if (dayTotals[d]) classes += ' has-data';
+      if (dateStr === selectedCalDate) classes += ' selected';
+
+      html += '<div class="' + classes + '" data-date="' + dateStr + '">';
+      html += '<span class="cal-date">' + d + '</span>';
+      if (dayTotals[d]) {
+        html += '<span class="cal-amount">¥' + formatNum(dayTotals[d]) + '</span>';
+      }
+      html += '</div>';
+    }
+
+    document.getElementById('calendar-body').innerHTML = html;
+  }
+
+  function showCalendarDetail(dateStr) {
+    selectedCalDate = dateStr;
+    renderCalendar();
+
+    var dayTx = calendarTransactions.filter(function(tx) { return tx.date === dateStr; });
+    var detailEl = document.getElementById('calendar-detail');
+    var listEl = document.getElementById('calendar-detail-list');
+
+    if (dayTx.length === 0) {
+      detailEl.style.display = 'none';
+      return;
+    }
+
+    var parts = dateStr.split('-');
+    var total = dayTx.reduce(function(s, tx) { return s + tx.total; }, 0);
+    document.getElementById('calendar-detail-title').textContent =
+      parseInt(parts[1]) + '月' + parseInt(parts[2]) + '日の明細（¥' + formatNum(total) + '）';
+
+    listEl.innerHTML = dayTx.map(function(tx) {
+      return '<div class="history-item" data-id="' + tx.id + '">' +
+        '<div class="history-left">' +
+          '<span class="history-store">' + (tx.store || tx.memo || 'ー') + '</span>' +
+          '<span class="history-meta">' + (CATEGORY_EMOJI[tx.category] || '') + ' ' + tx.category + '</span>' +
+        '</div>' +
+        '<div class="history-right">' +
+          '<span class="history-amount">¥' + formatNum(tx.total) + '</span>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+
+    detailEl.style.display = 'block';
+  }
+
   // === CSVインポート ===
   var importItems = [];
 
@@ -434,6 +533,24 @@
     document.getElementById('edit-cancel').addEventListener('click', function() {
       document.getElementById('edit-modal').style.display = 'none';
       editingTxId = null;
+    });
+
+    // カレンダー月切り替え
+    document.getElementById('calendar-prev').addEventListener('click', function() {
+      calendarMonth = shiftMonth(calendarMonth, -1);
+      loadCalendar();
+    });
+    document.getElementById('calendar-next').addEventListener('click', function() {
+      calendarMonth = shiftMonth(calendarMonth, 1);
+      loadCalendar();
+    });
+
+    // カレンダー日付クリック
+    document.getElementById('calendar-body').addEventListener('click', function(e) {
+      var cell = e.target.closest('.cal-cell');
+      if (cell && !cell.classList.contains('empty')) {
+        showCalendarDetail(cell.dataset.date);
+      }
     });
 
     // 年間切り替え

@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>簡単家計簿 - 取扱説明書</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif;
+    background: #f5f7fa;
+    color: #333;
+    line-height: 1.7;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* ヘッダー */
+  .header {
+    background: linear-gradient(135deg, #4CAF50, #2E7D32);
+    color: #fff;
+    padding: 40px 20px 30px;
+    text-align: center;
+  }
+  .header h1 { font-size: 28px; margin-bottom: 6px; }
+  .header p { font-size: 14px; opacity: 0.9; }
+  .header .version { font-size: 12px; opacity: 0.7; margin-top: 8px; }
+
+  /* コンテナ */
+  .container { max-width: 680px; margin: 0 auto; padding: 0 16px 60px; }
+
+  /* 目次 */
+  .toc {
+    background: #fff;
+    border-radius: 12px;
+    margin: 20px 0;
+    padding: 20px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
+  .toc h2 { font-size: 16px; margin-bottom: 12px; color: #2E7D32; }
+  .toc ol { padding-left: 20px; }
+  .toc li { margin-bottom: 6px; }
+  .toc a { color: #2E7D32; text-decoration: none; font-size: 14px; }
+  .toc a:hover { text-decoration: underline; }
+
+  /* セクション */
+  .section {
+    background: #fff;
+    border-radius: 12px;
+    margin: 20px 0;
+    padding: 24px 20px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
+  .section h2 {
+    font-size: 20px;
+    color: #2E7D32;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #E8F5E9;
+  }
+  .section h3 {
+    font-size: 16px;
+    color: #1B5E20;
+    margin: 20px 0 10px;
+  }
+  .section p { font-size: 14px; margin-bottom: 12px; }
+
+  /* ステップ */
+  .steps { list-style: none; padding: 0; }
+  .steps li {
+    position: relative;
+    padding: 12px 12px 12px 48px;
+    margin-bottom: 8px;
+    background: #F1F8E9;
+    border-radius: 8px;
+    font-size: 14px;
+  }
+  .steps li::before {
+    content: attr(data-step);
+    position: absolute;
+    left: 12px;
+    top: 12px;
+    width: 26px;
+    height: 26px;
+    background: #4CAF50;
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: bold;
+  }
+
+  /* 機能カード */
+  .feature-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px;
+    margin-bottom: 10px;
+    background: #FAFAFA;
+    border-radius: 8px;
+    border-left: 4px solid #4CAF50;
+  }
+  .feature-card .icon { font-size: 28px; flex-shrink: 0; }
+  .feature-card .text h4 { font-size: 15px; margin-bottom: 4px; }
+  .feature-card .text p { font-size: 13px; color: #666; margin: 0; }
+
+  /* コマンド表 */
+  .cmd-table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 14px; }
+  .cmd-table th {
+    background: #E8F5E9;
+    padding: 10px 12px;
+    text-align: left;
+    font-size: 13px;
+    color: #2E7D32;
+  }
+  .cmd-table td { padding: 10px 12px; border-bottom: 1px solid #eee; }
+  .cmd-table tr:last-child td { border-bottom: none; }
+
+  /* 入力例 */
+  .example {
+    background: #263238;
+    color: #E0E0E0;
+    padding: 14px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    margin: 10px 0;
+    font-family: 'SF Mono', 'Menlo', monospace;
+    line-height: 1.8;
+  }
+  .example .label {
+    color: #81C784;
+    font-size: 12px;
+    display: block;
+    margin-bottom: 4px;
+  }
+  .example .you { color: #81D4FA; }
+  .example .bot { color: #FFF59D; }
+
+  /* 吹き出し風 */
+  .chat-demo {
+    margin: 12px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .chat-demo .msg {
+    max-width: 80%;
+    padding: 10px 14px;
+    border-radius: 16px;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .chat-demo .msg.user {
+    align-self: flex-end;
+    background: #4CAF50;
+    color: #fff;
+    border-bottom-right-radius: 4px;
+  }
+  .chat-demo .msg.bot {
+    align-self: flex-start;
+    background: #E8E8E8;
+    color: #333;
+    border-bottom-left-radius: 4px;
+  }
+  .chat-demo .msg.bot .emoji { font-size: 16px; }
+
+  /* カテゴリ一覧 */
+  .category-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 8px;
+    margin: 12px 0;
+  }
+  .category-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    background: #F5F5F5;
+    border-radius: 8px;
+    font-size: 14px;
+  }
+  .category-item .emoji { font-size: 20px; }
+
+  /* LIFF画面説明 */
+  .screen-card {
+    padding: 16px;
+    margin-bottom: 12px;
+    background: #FAFAFA;
+    border-radius: 10px;
+    border: 1px solid #E0E0E0;
+  }
+  .screen-card h4 {
+    font-size: 15px;
+    color: #2E7D32;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .screen-card ul {
+    padding-left: 18px;
+    font-size: 13px;
+    color: #555;
+  }
+  .screen-card li { margin-bottom: 4px; }
+
+  /* 注意書き */
+  .note {
+    background: #FFF3E0;
+    border-left: 4px solid #FF9800;
+    padding: 12px 14px;
+    border-radius: 0 8px 8px 0;
+    font-size: 13px;
+    margin: 12px 0;
+    color: #E65100;
+  }
+  .note::before { content: '⚠️ '; }
+
+  .tip {
+    background: #E8F5E9;
+    border-left: 4px solid #4CAF50;
+    padding: 12px 14px;
+    border-radius: 0 8px 8px 0;
+    font-size: 13px;
+    margin: 12px 0;
+    color: #1B5E20;
+  }
+  .tip::before { content: '💡 '; }
+
+  /* FAQ */
+  .faq-item {
+    margin-bottom: 14px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #eee;
+  }
+  .faq-item:last-child { border-bottom: none; padding-bottom: 0; margin-bottom: 0; }
+  .faq-item .q {
+    font-weight: bold;
+    font-size: 14px;
+    color: #2E7D32;
+    margin-bottom: 6px;
+  }
+  .faq-item .q::before { content: 'Q. '; }
+  .faq-item .a { font-size: 13px; color: #555; }
+  .faq-item .a::before { content: 'A. '; font-weight: bold; color: #333; }
+
+  /* フッター */
+  .footer {
+    text-align: center;
+    padding: 30px 20px;
+    font-size: 12px;
+    color: #999;
+  }
+
+  /* レスポンシブ */
+  @media (max-width: 480px) {
+    .header h1 { font-size: 24px; }
+    .section { padding: 18px 16px; }
+    .category-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- ヘッダー -->
+<div class="header">
+  <h1>📗 簡単家計簿</h1>
+  <p>LINE で手軽に家計管理</p>
+  <div class="version">取扱説明書 v1.0</div>
+</div>
+
+<div class="container">
+
+  <!-- 目次 -->
+  <nav class="toc">
+    <h2>もくじ</h2>
+    <ol>
+      <li><a href="#about">簡単家計簿とは</a></li>
+      <li><a href="#start">はじめかた</a></li>
+      <li><a href="#receipt">レシート写真で記録する</a></li>
+      <li><a href="#text">テキストで記録する</a></li>
+      <li><a href="#commands">コマンド一覧</a></li>
+      <li><a href="#categories">カテゴリ一覧</a></li>
+      <li><a href="#liff">家計簿アプリ（詳細画面）</a></li>
+      <li><a href="#budget">予算を設定する</a></li>
+      <li><a href="#edit">記録を修正・削除する</a></li>
+      <li><a href="#limits">ご利用上の注意</a></li>
+      <li><a href="#faq">よくある質問</a></li>
+    </ol>
+  </nav>
+
+  <!-- 1. 簡単家計簿とは -->
+  <section class="section" id="about">
+    <h2>1. 簡単家計簿とは</h2>
+    <p>簡単家計簿は、<strong>LINEだけで家計管理ができる</strong>無料の家計簿アプリです。</p>
+
+    <div class="feature-card">
+      <div class="icon">📸</div>
+      <div class="text">
+        <h4>レシート写真でかんたん記録</h4>
+        <p>レシートの写真を撮って送るだけ。AIが自動で読み取り、金額・店名・カテゴリを記録します。</p>
+      </div>
+    </div>
+
+    <div class="feature-card">
+      <div class="icon">💬</div>
+      <div class="text">
+        <h4>テキスト入力もOK</h4>
+        <p>「ランチ 850円」のようにメッセージを送るだけで、金額とカテゴリを自動判定して記録します。</p>
+      </div>
+    </div>
+
+    <div class="feature-card">
+      <div class="icon">📊</div>
+      <div class="text">
+        <h4>集計・分析もおまかせ</h4>
+        <p>月ごとの集計、カテゴリ別の内訳、年間推移をグラフで確認できます。</p>
+      </div>
+    </div>
+
+    <div class="feature-card">
+      <div class="icon">💰</div>
+      <div class="text">
+        <h4>予算管理</h4>
+        <p>月の予算を設定すれば、残高や1日あたりの使える金額がひと目でわかります。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. はじめかた -->
+  <section class="section" id="start">
+    <h2>2. はじめかた</h2>
+    <p>3ステップですぐに使い始められます。</p>
+
+    <ul class="steps">
+      <li data-step="1">
+        LINEで<strong>「@875meuva」</strong>を検索して友だち追加します。<br>
+        または下のQRコードを読み取ってください。
+      </li>
+      <li data-step="2">
+        友だち追加すると、ウェルカムメッセージが届きます。<br>
+        この時点で自動的にアカウントが作成されます。
+      </li>
+      <li data-step="3">
+        さっそくレシートの写真を送るか、「ランチ 850円」のようにテキストを送ってみましょう！
+      </li>
+    </ul>
+
+    <div class="tip">面倒な登録やパスワード設定は不要です。友だち追加するだけで始められます。</div>
+  </section>
+
+  <!-- 3. レシート写真で記録する -->
+  <section class="section" id="receipt">
+    <h2>3. レシート写真で記録する</h2>
+    <p>レシートの写真をLINEで送るだけで、AIが自動で内容を読み取ります。</p>
+
+    <h3>使い方</h3>
+    <ul class="steps">
+      <li data-step="1">LINEのカメラまたは写真フォルダからレシートの画像を送信します。</li>
+      <li data-step="2">AIが読み取り、確認画面が表示されます。<br>日付・店名・金額・カテゴリ・商品リストを確認してください。</li>
+      <li data-step="3">
+        3つのボタンから選びます：<br>
+        <strong>✅ 記録する</strong> → そのまま記録<br>
+        <strong>✏️ カテゴリ修正</strong> → カテゴリを選び直す<br>
+        <strong>❌ キャンセル</strong> → 記録しない
+      </li>
+    </ul>
+
+    <div class="tip">レシートはなるべく平らにして、文字がはっきり見えるように撮影するときれいに読み取れます。</div>
+
+    <div class="note">レシートの読み取りは1日10回までです。テキスト入力は回数制限がありません。</div>
+  </section>
+
+  <!-- 4. テキストで記録する -->
+  <section class="section" id="text">
+    <h2>4. テキストで記録する</h2>
+    <p>レシートがないときは、テキストメッセージでも記録できます。</p>
+
+    <h3>入力の書き方</h3>
+    <p>メモと金額を一緒に送るだけでOKです。カテゴリは自動で判定されます。</p>
+
+    <div class="chat-demo">
+      <div class="msg user">ランチ 850円</div>
+      <div class="msg bot">
+        <span class="emoji">✅</span> 記録しました！<br>
+        🍽 食費 ¥850（ランチ）
+      </div>
+    </div>
+
+    <h3>入力例いろいろ</h3>
+    <div class="example">
+      <span class="label">こんな書き方ができます</span>
+      <span class="you">ランチ 850円</span> → 🍽 食費 ¥850<br>
+      <span class="you">電車 320</span> → 🚃 交通費 ¥320<br>
+      <span class="you">マクド ¥1,200</span> → 🍽 食費 ¥1,200<br>
+      <span class="you">交通費 バス 220円</span> → 🚃 交通費 ¥220<br>
+      <span class="you">薬局 2500</span> → 🏥 医療費 ¥2,500<br>
+      <span class="you">Netflix 1490円</span> → 🎮 趣味・娯楽 ¥1,490
+    </div>
+
+    <div class="tip">カテゴリ名を先頭に書くと、確実にそのカテゴリで記録されます。<br>例：「<strong>教育費</strong> 参考書 1800円」</div>
+  </section>
+
+  <!-- 5. コマンド一覧 -->
+  <section class="section" id="commands">
+    <h2>5. コマンド一覧</h2>
+    <p>以下のキーワードをLINEで送ると、情報を確認できます。</p>
+
+    <table class="cmd-table">
+      <tr>
+        <th>送るメッセージ</th>
+        <th>できること</th>
+      </tr>
+      <tr>
+        <td><strong>残高</strong></td>
+        <td>今月の予算・使用額・残りの金額を表示します。1日あたりの使える金額もわかります。</td>
+      </tr>
+      <tr>
+        <td><strong>まとめ</strong>（または「集計」）</td>
+        <td>今月のカテゴリ別集計を表示します。合計額とパーセンテージがわかります。</td>
+      </tr>
+      <tr>
+        <td><strong>ヘルプ</strong>（または「使い方」）</td>
+        <td>使い方の案内を表示します。</td>
+      </tr>
+      <tr>
+        <td><strong>削除</strong>（または「退会」）</td>
+        <td>データ削除の方法を案内します。</td>
+      </tr>
+    </table>
+
+    <h3>使用例</h3>
+    <div class="chat-demo">
+      <div class="msg user">残高</div>
+      <div class="msg bot">
+        💰 今月の残高<br>
+        予算: ¥100,000<br>
+        使用: ¥75,000<br>
+        残り: ¥25,000<br>
+        （1日あたり約 ¥2,500 使えます）
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. カテゴリ一覧 -->
+  <section class="section" id="categories">
+    <h2>6. カテゴリ一覧</h2>
+    <p>支出は自動で7つのカテゴリに分類されます。</p>
+
+    <div class="category-grid">
+      <div class="category-item"><span class="emoji">🍽</span> 食費</div>
+      <div class="category-item"><span class="emoji">🧴</span> 日用品</div>
+      <div class="category-item"><span class="emoji">🚃</span> 交通費</div>
+      <div class="category-item"><span class="emoji">🏥</span> 医療費</div>
+      <div class="category-item"><span class="emoji">📚</span> 教育費</div>
+      <div class="category-item"><span class="emoji">🎮</span> 趣味・娯楽</div>
+      <div class="category-item"><span class="emoji">📦</span> その他</div>
+    </div>
+
+    <h3>自動判定の例</h3>
+    <table class="cmd-table">
+      <tr><th>キーワード</th><th>カテゴリ</th></tr>
+      <tr><td>スーパー、マクド、ラーメン、コンビニ</td><td>🍽 食費</td></tr>
+      <tr><td>ドラッグストア、洗剤、100均</td><td>🧴 日用品</td></tr>
+      <tr><td>電車、バス、タクシー、ガソリン</td><td>🚃 交通費</td></tr>
+      <tr><td>病院、薬局</td><td>🏥 医療費</td></tr>
+      <tr><td>塾、習い事、本</td><td>📚 教育費</td></tr>
+      <tr><td>映画、ゲーム、Netflix、USJ、旅行</td><td>🎮 趣味・娯楽</td></tr>
+    </table>
+
+    <div class="tip">判定が違っていても大丈夫。レシート読み取り時は「✏️ カテゴリ修正」ボタンで変更できます。アプリの明細画面からも後から修正できます。</div>
+  </section>
+
+  <!-- 7. 家計簿アプリ（LIFF詳細画面） -->
+  <section class="section" id="liff">
+    <h2>7. 家計簿アプリ（詳細画面）</h2>
+    <p>LINEのメニューから家計簿アプリを開くと、より詳しい分析や管理ができます。</p>
+
+    <div class="screen-card">
+      <h4>📊 ダッシュボード</h4>
+      <ul>
+        <li>今月の予算・使用額・残りをひと目で確認</li>
+        <li>カテゴリ別の内訳をドーナツグラフで表示</li>
+        <li>各カテゴリの金額と割合がわかります</li>
+      </ul>
+    </div>
+
+    <div class="screen-card">
+      <h4>💰 予算設定</h4>
+      <ul>
+        <li>月ごとの総予算を設定</li>
+        <li>カテゴリ別の予算も個別に設定可能</li>
+        <li>過去3ヶ月の平均から翌月の予算を提案</li>
+      </ul>
+    </div>
+
+    <div class="screen-card">
+      <h4>📋 明細一覧</h4>
+      <ul>
+        <li>月ごとの支出を日付順でリスト表示</li>
+        <li>件数と月合計がわかります</li>
+        <li>タップすると明細の編集・削除ができます</li>
+      </ul>
+    </div>
+
+    <div class="screen-card">
+      <h4>📈 月別推移</h4>
+      <ul>
+        <li>過去12ヶ月の支出推移を棒グラフで表示</li>
+        <li>予算ラインも一緒に表示されるので比較しやすい</li>
+      </ul>
+    </div>
+
+    <div class="screen-card">
+      <h4>📅 年間表</h4>
+      <ul>
+        <li>月 × カテゴリのマトリックス（表形式）で1年分の支出を一覧表示</li>
+        <li>月ごと・カテゴリごとの合計がわかります</li>
+      </ul>
+    </div>
+
+    <div class="screen-card">
+      <h4>⚙️ 設定</h4>
+      <ul>
+        <li>プライバシーポリシーの確認</li>
+        <li>全データの削除</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 8. 予算を設定する -->
+  <section class="section" id="budget">
+    <h2>8. 予算を設定する</h2>
+    <p>月の予算を設定すると、残高管理がより便利になります。</p>
+
+    <ul class="steps">
+      <li data-step="1">家計簿アプリを開き、「💰 予算設定」画面に移動します。</li>
+      <li data-step="2">月の総予算を入力します（例：100,000円）。</li>
+      <li data-step="3">必要に応じて、カテゴリ別の予算も設定します。</li>
+      <li data-step="4">「保存」ボタンをタップして完了です。</li>
+    </ul>
+
+    <div class="tip">「翌月の予算提案」機能を使うと、過去3ヶ月の平均から予算の目安を自動で計算してくれます。</div>
+
+    <p>予算を設定すると、以下のことができるようになります：</p>
+    <ul style="padding-left: 18px; font-size: 14px; margin-top: 8px;">
+      <li>「残高」コマンドで残りの金額を確認</li>
+      <li>1日あたりの使える金額を把握</li>
+      <li>ダッシュボードでプログレスバー表示</li>
+      <li>月別推移グラフに予算ラインを表示</li>
+    </ul>
+  </section>
+
+  <!-- 9. 記録を修正・削除する -->
+  <section class="section" id="edit">
+    <h2>9. 記録を修正・削除する</h2>
+
+    <h3>明細を修正する</h3>
+    <ul class="steps">
+      <li data-step="1">家計簿アプリの「📋 明細一覧」画面を開きます。</li>
+      <li data-step="2">修正したい明細をタップします。</li>
+      <li data-step="3">編集画面で日付・店名・金額・カテゴリを修正します。</li>
+      <li data-step="4">「保存」をタップして完了です。</li>
+    </ul>
+
+    <h3>明細を削除する</h3>
+    <p>明細の編集画面から個別に削除できます。</p>
+
+    <h3>全データを削除する</h3>
+    <p>家計簿アプリの「⚙️ 設定」画面から全データを削除できます。</p>
+    <div class="note">全データ削除は元に戻せません。実行前に確認ダイアログが表示されます。</div>
+  </section>
+
+  <!-- 10. ご利用上の注意 -->
+  <section class="section" id="limits">
+    <h2>10. ご利用上の注意</h2>
+
+    <table class="cmd-table">
+      <tr>
+        <th>項目</th>
+        <th>内容</th>
+      </tr>
+      <tr>
+        <td>レシート読み取り回数</td>
+        <td>1日10回まで（毎日リセット）</td>
+      </tr>
+      <tr>
+        <td>テキスト入力</td>
+        <td>回数制限なし</td>
+      </tr>
+      <tr>
+        <td>対応カテゴリ</td>
+        <td>7種類（固定）</td>
+      </tr>
+      <tr>
+        <td>料金</td>
+        <td>無料</td>
+      </tr>
+    </table>
+
+    <div class="note">レシートの状態（折れ、汚れ、印字が薄い等）によっては、正しく読み取れない場合があります。その場合はテキスト入力をご利用ください。</div>
+  </section>
+
+  <!-- 11. よくある質問 -->
+  <section class="section" id="faq">
+    <h2>11. よくある質問</h2>
+
+    <div class="faq-item">
+      <div class="q">レシートの写真がうまく読み取れません</div>
+      <div class="a">レシートを平らにして、明るい場所で文字がはっきり写るように撮影してください。それでもうまくいかない場合は、テキスト入力で記録できます。</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="q">カテゴリの判定が間違っています</div>
+      <div class="a">レシート読み取り時は「✏️ カテゴリ修正」ボタンで変更できます。記録済みの明細は、アプリの明細一覧から編集できます。</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="q">予算を設定しないと使えませんか？</div>
+      <div class="a">いいえ。予算なしでも支出の記録・集計はできます。予算を設定すると残高管理が便利になります。</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="q">過去の月の記録も見られますか？</div>
+      <div class="a">はい。アプリの明細一覧・年間表で過去の月を遡って確認できます。</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="q">家族で共有できますか？</div>
+      <div class="a">現在は1つのLINEアカウントにつき1つの家計簿です。それぞれのLINEアカウントで友だち追加すると、別々の家計簿として使えます。</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="q">データはどこに保存されていますか？</div>
+      <div class="a">Google スプレッドシートに安全に保存されています。ユーザーごとに独立したシートが自動で作成されます。</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="q">退会・データ削除するには？</div>
+      <div class="a">アプリの「⚙️ 設定」画面から全データを削除できます。LINEで「削除」と送信すると案内が表示されます。</div>
+    </div>
+  </section>
+
+</div>
+
+<!-- フッター -->
+<div class="footer">
+  <p>簡単家計簿 取扱説明書</p>
+  <p>© 2026 tamago.app</p>
+</div>
+
+</body>
+</html>

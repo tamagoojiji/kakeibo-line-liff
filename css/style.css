@@ -549,3 +549,83 @@ body {
 #import-cancel {
   margin-top: 8px;
 }
+
+/* === カレンダー === */
+.calendar-grid {
+  width: 100%;
+}
+
+.calendar-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.cal-day-name.sun { color: var(--danger); }
+.cal-day-name.sat { color: #1565c0; }
+
+.calendar-body {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.cal-cell {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+  position: relative;
+  padding: 2px;
+  gap: 1px;
+}
+
+.cal-cell.empty {
+  cursor: default;
+}
+
+.cal-cell.today .cal-date {
+  background: var(--primary);
+  color: white;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cal-cell.sun .cal-date { color: var(--danger); }
+.cal-cell.sat .cal-date { color: #1565c0; }
+.cal-cell.today .cal-date { color: white; }
+
+.cal-cell.has-data {
+  background: #e8f5e9;
+}
+
+.cal-cell.selected {
+  background: #c8e6c9;
+}
+
+.cal-date {
+  font-weight: 500;
+  font-size: 13px;
+  line-height: 1;
+}
+
+.cal-amount {
+  font-size: 9px;
+  color: var(--danger);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}

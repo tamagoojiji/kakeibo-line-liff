@@ -80,6 +80,37 @@
       </div>
     </div>
 
+    <!-- カレンダー -->
+    <div id="page-calendar" class="page" style="display:none;">
+      <div class="header">
+        <h1>カレンダー</h1>
+      </div>
+      <div class="month-selector">
+        <button id="calendar-prev" class="btn-icon">&lt;</button>
+        <span id="calendar-month-label">2026年4月</span>
+        <button id="calendar-next" class="btn-icon">&gt;</button>
+      </div>
+      <div id="calendar-total" class="history-total"></div>
+      <div class="section" style="padding:8px;">
+        <div class="calendar-grid">
+          <div class="calendar-header">
+            <span class="cal-day-name sun">日</span>
+            <span class="cal-day-name">月</span>
+            <span class="cal-day-name">火</span>
+            <span class="cal-day-name">水</span>
+            <span class="cal-day-name">木</span>
+            <span class="cal-day-name">金</span>
+            <span class="cal-day-name sat">土</span>
+          </div>
+          <div id="calendar-body" class="calendar-body"></div>
+        </div>
+      </div>
+      <div id="calendar-detail" class="section" style="display:none;">
+        <h2 id="calendar-detail-title"></h2>
+        <div id="calendar-detail-list" class="history-list" style="margin:0;"></div>
+      </div>
+    </div>
+
     <!-- 月別推移 -->
     <div id="page-trend" class="page" style="display:none;">
       <div class="header">
@@ -194,6 +225,10 @@
       <button class="nav-item" data-page="history">
         <span class="nav-icon">📋</span>
         <span class="nav-label">明細</span>
+      </button>
+      <button class="nav-item" data-page="calendar">
+        <span class="nav-icon">🗓</span>
+        <span class="nav-label">カレンダー</span>
       </button>
       <button class="nav-item" data-page="trend">
         <span class="nav-icon">📈</span>
