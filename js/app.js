@@ -60,7 +60,6 @@
       case 'budget': loadBudget(); break;
       case 'calendar': loadCalendar(); break;
       case 'analysis': loadAnalysis(); break;
-      case 'import': loadImport(); break;
     }
   }
 
@@ -368,95 +367,6 @@
     detailEl.style.display = 'block';
   }
 
-  // === CSVインポート ===
-  var importItems = [];
-
-  function loadImport() {
-    document.getElementById('import-status').style.display = 'none';
-    document.getElementById('import-preview').style.display = 'none';
-    document.getElementById('csv-file-input').value = '';
-    importItems = [];
-  }
-
-  function handleCsvUpload(file) {
-    if (!file || !file.name.match(/\.csv$/i)) {
-      alert('CSVファイル（.csv）を選択してください。');
-      return;
-    }
-
-    var statusEl = document.getElementById('import-status');
-    statusEl.style.display = 'block';
-    statusEl.textContent = '解析中...';
-    statusEl.className = 'import-status loading';
-    document.getElementById('import-preview').style.display = 'none';
-
-    var reader = new FileReader();
-    reader.onload = function(e) {
-      var csvText = e.target.result;
-      API.importCsv(csvText).then(function(data) {
-        if (!data.ok || !data.items || data.items.length === 0) {
-          statusEl.textContent = 'CSVの解析に失敗しました。銀行口座やクレカの明細CSVを選択してください。';
-          statusEl.className = 'import-status error';
-          return;
-        }
-        importItems = data.items;
-        statusEl.style.display = 'none';
-        renderImportPreview(importItems);
-      });
-    };
-    reader.readAsText(file);
-  }
-
-  function renderImportPreview(items) {
-    var total = 0;
-    for (var i = 0; i < items.length; i++) total += items[i].total;
-
-    document.getElementById('import-summary').textContent = items.length + '件 / 合計 ¥' + formatNum(total);
-    var tbody = document.getElementById('import-tbody');
-    var categories = ['食費', '日用品', '交通費', '医療費', '教育費', '趣味・娯楽', 'その他'];
-
-    tbody.innerHTML = items.map(function(item, idx) {
-      var options = categories.map(function(cat) {
-        var selected = cat === item.category ? ' selected' : '';
-        return '<option value="' + cat + '"' + selected + '>' + cat + '</option>';
-      }).join('');
-      return '<tr>' +
-        '<td>' + (item.date || '-') + '</td>' +
-        '<td>' + (item.store || '-') + '</td>' +
-        '<td class="amount">¥' + formatNum(item.total) + '</td>' +
-        '<td><select class="import-cat-select" data-idx="' + idx + '">' + options + '</select></td>' +
-        '</tr>';
-    }).join('');
-
-    document.getElementById('import-preview').style.display = 'block';
-  }
-
-  function confirmImport() {
-    // カテゴリ変更を反映
-    var selects = document.querySelectorAll('.import-cat-select');
-    selects.forEach(function(sel) {
-      var idx = parseInt(sel.dataset.idx);
-      if (importItems[idx]) importItems[idx].category = sel.value;
-    });
-
-    var statusEl = document.getElementById('import-status');
-    statusEl.style.display = 'block';
-    statusEl.textContent = '保存中...';
-    statusEl.className = 'import-status loading';
-
-    API.confirmImport(importItems).then(function(data) {
-      if (data.ok) {
-        statusEl.textContent = '✅ ' + data.count + '件を取り込みました！';
-        statusEl.className = 'import-status success';
-        document.getElementById('import-preview').style.display = 'none';
-        importItems = [];
-      } else {
-        statusEl.textContent = '保存に失敗しました: ' + (data.error || '');
-        statusEl.className = 'import-status error';
-      }
-    });
-  }
-
   // === イベントバインド ===
   function bindEvents() {
     // ナビゲーション
@@ -516,15 +426,6 @@
     document.getElementById('annual-next').addEventListener('click', function() {
       currentYear = (parseInt(currentYear) + 1).toString();
       loadAnnualTable();
-    });
-
-    // CSVインポート
-    document.getElementById('csv-file-input').addEventListener('change', function(e) {
-      if (e.target.files && e.target.files[0]) handleCsvUpload(e.target.files[0]);
-    });
-    document.getElementById('import-confirm').addEventListener('click', confirmImport);
-    document.getElementById('import-cancel').addEventListener('click', function() {
-      loadImport();
     });
 
     // データ削除
