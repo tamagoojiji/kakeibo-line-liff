@@ -53,13 +53,23 @@
           <label>月の総予算</label>
           <input type="number" id="budget-total" placeholder="例: 50000" inputmode="numeric">
         </div>
-        <h3>カテゴリ別予算（任意）</h3>
-        <div id="budget-categories"></div>
+        <div class="quick-amount">
+          <button type="button" class="quick-btn" data-amount="30000">3万</button>
+          <button type="button" class="quick-btn" data-amount="50000">5万</button>
+          <button type="button" class="quick-btn" data-amount="100000">10万</button>
+          <button type="button" class="quick-btn" data-amount="150000">15万</button>
+          <button type="button" class="quick-btn" data-amount="200000">20万</button>
+        </div>
+        <details class="category-details">
+          <summary>カテゴリ別に細かく設定（任意）</summary>
+          <div id="budget-categories"></div>
+        </details>
         <button id="budget-save" class="btn-primary">保存する</button>
       </div>
       <div class="section" id="budget-suggestion" style="display:none;">
         <h2>翌月の予算提案</h2>
         <div id="suggestion-content"></div>
+        <button id="budget-apply-suggestion" class="btn-primary">この提案で保存</button>
       </div>
     </div>
 

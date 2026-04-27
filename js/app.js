@@ -117,6 +117,7 @@
 
   // === 予算設定 ===
   var budgetMonth = getCurrentMonth();
+  var lastSuggestion = null;
 
   function loadBudget() {
     document.getElementById('budget-month-label').textContent = formatMonthLabel(budgetMonth);
@@ -156,6 +157,7 @@
 
       document.getElementById('budget-suggestion').style.display = 'block';
       var s = data.suggestion;
+      lastSuggestion = { month: nextMonth, totalBudget: s.totalBudget, categoryBudgets: s.categoryBudgets || {} };
       var html = '<p style="font-size:13px;color:#999;margin-bottom:8px">' + s.basedOn + '</p>';
       html += '<div class="suggest-row"><span>合計</span><span>¥' + formatNum(s.totalBudget) + '</span></div>';
       ChartHelper.CATEGORIES.forEach(function(cat) {
@@ -165,6 +167,20 @@
         }
       });
       document.getElementById('suggestion-content').innerHTML = html;
+    });
+  }
+
+  function applySuggestion() {
+    if (!lastSuggestion) return;
+    var s = lastSuggestion;
+    API.setBudget(s.month, s.totalBudget, s.categoryBudgets).then(function(data) {
+      if (data.ok) {
+        alert(formatMonthLabel(s.month) + 'の予算として保存しました');
+        budgetMonth = s.month;
+        loadBudget();
+      } else {
+        alert('保存に失敗しました');
+      }
     });
   }
 
@@ -386,6 +402,16 @@
       loadBudget();
     });
     document.getElementById('budget-save').addEventListener('click', saveBudget);
+
+    // クイック金額ボタン
+    document.querySelectorAll('.quick-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        document.getElementById('budget-total').value = this.dataset.amount;
+      });
+    });
+
+    // 翌月提案を適用して保存
+    document.getElementById('budget-apply-suggestion').addEventListener('click', applySuggestion);
 
     // 編集モーダル
     document.getElementById('edit-save').addEventListener('click', saveEdit);
