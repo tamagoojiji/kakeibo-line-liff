@@ -4,6 +4,7 @@
 var ChartHelper = (function() {
   var CATEGORY_COLORS = {
     '食費': '#FF6384',
+    '外食費': '#FF8A80',
     '日用品': '#36A2EB',
     '交通費': '#FFCE56',
     '医療費': '#4BC0C0',
@@ -12,7 +13,7 @@ var ChartHelper = (function() {
     'その他': '#C9CBCF'
   };
 
-  var CATEGORIES = ['食費', '日用品', '交通費', '医療費', '教育費', '趣味・娯楽', 'その他'];
+  var CATEGORIES = ['食費', '外食費', '日用品', '交通費', '医療費', '教育費', '趣味・娯楽', 'その他'];
 
   var charts = {};
 

@@ -719,3 +719,14 @@ body {
 #budget-apply-suggestion {
   margin-top: 12px;
 }
+
+/* カテゴリ別のクイック金額ボタン（少し小さめ） */
+.quick-amount-cat {
+  margin-top: 6px;
+  margin-bottom: 0;
+}
+
+.quick-amount-cat .quick-btn {
+  padding: 6px 0;
+  font-size: 11px;
+}

@@ -9,9 +9,21 @@
   var editingTxId = null;
 
   var CATEGORY_EMOJI = {
-    '食費': '🍽', '日用品': '🧴', '交通費': '🚃',
+    '食費': '🛒', '外食費': '🍽', '日用品': '🧴', '交通費': '🚃',
     '医療費': '🏥', '教育費': '📚', '趣味・娯楽': '🎮', 'その他': '📦'
   };
+
+  // カテゴリ別予算のクイック金額ボタン
+  var CATEGORY_QUICK_AMOUNTS = {
+    '食費': [10000, 20000, 30000, 50000, 80000]
+    // 他のカテゴリはデフォルト [5000, 10000, 20000, 30000, 50000]
+  };
+  var DEFAULT_QUICK_AMOUNTS = [5000, 10000, 20000, 30000, 50000];
+
+  function formatQuickLabel(n) {
+    if (n >= 10000) return (n / 10000) + '万';
+    return (n / 1000) + '千';
+  }
 
   // === 初期化 ===
   function init() {
@@ -126,11 +138,24 @@
     var catEl = document.getElementById('budget-categories');
     if (catEl.children.length === 0) {
       ChartHelper.CATEGORIES.forEach(function(cat) {
+        var amounts = CATEGORY_QUICK_AMOUNTS[cat] || DEFAULT_QUICK_AMOUNTS;
+        var quickHtml = amounts.map(function(n) {
+          return '<button type="button" class="quick-btn quick-cat-btn" data-cat="' + cat + '" data-amount="' + n + '">' + formatQuickLabel(n) + '</button>';
+        }).join('');
         catEl.innerHTML +=
           '<div class="form-group">' +
             '<label>' + (CATEGORY_EMOJI[cat] || '') + ' ' + cat + '</label>' +
             '<input type="number" id="budget-cat-' + cat + '" placeholder="0" inputmode="numeric">' +
+            '<div class="quick-amount quick-amount-cat">' + quickHtml + '</div>' +
           '</div>';
+      });
+
+      // カテゴリ別クイック金額ボタンのイベント（イベント委譲で1回だけバインド）
+      catEl.addEventListener('click', function(e) {
+        var btn = e.target.closest('.quick-cat-btn');
+        if (!btn) return;
+        var input = document.getElementById('budget-cat-' + btn.dataset.cat);
+        if (input) input.value = btn.dataset.amount;
       });
     }
 
