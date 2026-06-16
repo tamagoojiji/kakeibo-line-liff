@@ -52,6 +52,8 @@ var API = (function() {
     },
     confirmImport: function(items) {
       return get('confirm_import', { items: items });
-    }
+    },
+    getQuota: function() { return get('quota'); },
+    createCheckout: function() { return get('checkout'); }
   };
 })();

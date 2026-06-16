@@ -46,6 +46,7 @@
 
       document.getElementById('loading').style.display = 'none';
       document.getElementById('nav').style.display = 'flex';
+      checkPaidReturn();
       showPage('dashboard');
       loadDashboard();
     }).catch(function(err) {
@@ -77,6 +78,7 @@
 
   // === ダッシュボード ===
   function loadDashboard() {
+    loadQuota();
     var monthLabel = formatMonthLabel(currentMonth);
     document.getElementById('dashboard-month-label').textContent = monthLabel + 'のまとめ';
 
@@ -125,6 +127,60 @@
           '</div>';
       });
     });
+  }
+
+  // === 利用状況・課金 ===
+  function loadQuota() {
+    if (!API.getQuota) return;
+    API.getQuota().then(function(data) {
+      if (!data || !data.ok) return;
+      var card = document.getElementById('quota-card');
+      if (!card) return;
+      card.style.display = 'block';
+      var counts = document.getElementById('quota-counts');
+      var premium = document.getElementById('quota-premium');
+      var upgrade = document.getElementById('quota-upgrade');
+
+      if (data.isPremium) {
+        counts.style.display = 'none';
+        upgrade.style.display = 'none';
+        premium.style.display = 'block';
+        return;
+      }
+      premium.style.display = 'none';
+      counts.style.display = 'block';
+      document.getElementById('quota-count').textContent = data.count;
+      document.getElementById('quota-limit').textContent = data.limit;
+      var pct = Math.min(100, Math.round(data.count / data.limit * 100));
+      var prog = document.getElementById('quota-progress');
+      prog.style.width = pct + '%';
+      prog.style.background = data.remaining <= 0 ? '#e53935' : '#4CAF50';
+      upgrade.style.display = data.remaining <= 0 ? 'block' : 'none';
+    });
+  }
+
+  function onCheckout() {
+    if (!API.createCheckout) return;
+    API.createCheckout().then(function(data) {
+      if (data && data.ok && data.url) {
+        if (typeof liff !== 'undefined' && liff.openWindow) {
+          liff.openWindow({ url: data.url, external: true });
+        } else {
+          window.location.href = data.url;
+        }
+      } else {
+        alert('購入手続きを開始できませんでした。時間をおいて再度お試しください。');
+      }
+    });
+  }
+
+  function checkPaidReturn() {
+    try {
+      var params = new URLSearchParams(location.search);
+      if (params.get('paid') === '1') {
+        alert('ありがとうございます！今月末まで無制限になりました ✨');
+      }
+    } catch (e) {}
   }
 
   // === 予算設定 ===
@@ -444,6 +500,10 @@
       document.getElementById('edit-modal').style.display = 'none';
       editingTxId = null;
     });
+
+    // 課金ボタン
+    var upgradeBtn = document.getElementById('quota-upgrade');
+    if (upgradeBtn) upgradeBtn.addEventListener('click', onCheckout);
 
     // カレンダー月切り替え
     document.getElementById('calendar-prev').addEventListener('click', function() {
